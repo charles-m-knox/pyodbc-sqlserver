@@ -50,15 +50,22 @@ class SqlServer:
         """
         try:
             parameters_list = None
+            commit = False
+
             if kwargs is not None:
                 for key, value in kwargs.items():
                     if key == 'parameters_list':
                         parameters_list = value
+                    if key == 'commit':
+                        commit = True
 
             if type(parameters_list) is list:
                 self._cursor.execute(query, parameters_list)
             else:
                 self._cursor.execute(query)
+
+            if commit is True:
+                self._cursor.commit()
 
             rows = None
             try:
@@ -89,12 +96,17 @@ class SqlServer:
         """
         try:
             parameters_list = None
+            commit = False
+
             if kwargs is not None:
                 for key, value in kwargs.items():
                     if key == 'parameters_list':
                         parameters_list = value
+                    if key == 'commit':
+                        commit = True
+
             paginated_query = '{} OFFSET {} ROWS FETCH NEXT {} ROWS ONLY;'.format(query, str(index), str(page_size))
-            rows = self.do_query(paginated_query, parameters_list=parameters_list)
+            rows = self.do_query(paginated_query, parameters_list=parameters_list, commit=commit)
             index += page_size
             return rows, index
         except Exception as e:
