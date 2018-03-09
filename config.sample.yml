@@ -1,0 +1,8 @@
+---
+
+sql_server:
+    server: 'server.com'
+    port: 1433
+    database: 'database'
+    username: 'user_name'
+    password: 'p4ssw0rd'

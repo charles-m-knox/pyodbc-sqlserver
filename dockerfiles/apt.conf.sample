@@ -1,0 +1,2 @@
+Acquire::http::proxy "http://proxy.site.com:9999/";
+Acquire::https::proxy "http://proxy.site.com:9999/";
