@@ -6,7 +6,7 @@ import argparse
 def main():
     config = None
 
-    parser = argparse.ArgumentParser(description='Logs in to a SQL Server')
+    parser = argparse.ArgumentParser(description='Logs into a SQL Server and runs a basic query')
     parser.add_argument('--config', default='config.yml', help='name of config file')
     args = parser.parse_args()
     args_dict = vars(args)

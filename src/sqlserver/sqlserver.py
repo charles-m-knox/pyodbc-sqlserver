@@ -245,7 +245,7 @@ class SqlServerDataHelper:
     def get_none_or_sql_server_bit(self, value, yes_no=False):
         """Takes any input value and attempts return a 1 or 0
 
-        Used for propagating either datetimes or NULL values to SQL Server
+        Used for propagating either boolean or NULL values to SQL Server
 
         Args:
             value (object): Boolean inputs are convetted to 1/0; None is propagated
