@@ -105,6 +105,9 @@ class SqlServer:
                     if key == 'commit':
                         commit = True
 
+            if 'order by' not in query.lower():
+                raise Exception('Paginated queries must have an ORDER BY clause')
+
             paginated_query = '{} OFFSET {} ROWS FETCH NEXT {} ROWS ONLY;'.format(query, str(index), str(page_size))
             rows = self.do_query(paginated_query, parameters_list=parameters_list, commit=commit)
             index += page_size
