@@ -2,3 +2,6 @@
 ignore =
     # line too long
     E501
+exclude =
+    .git
+    venv

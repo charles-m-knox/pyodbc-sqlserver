@@ -1,0 +1,15 @@
+flake8==3.5.0
+yamllint==1.8.1
+configparser==3.5.0
+coverage==4.3.4
+enum34==1.1.6
+funcsigs==1.0.2
+mccabe==0.6.1
+mock==2.0.0
+pbr==2.0.0
+pycodestyle==2.3.1
+pyflakes==1.5.0
+six==1.10.0
+pypandoc~=1.3.0
+radon
+unittest-xml-reporting

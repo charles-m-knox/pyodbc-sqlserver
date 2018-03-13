@@ -7,3 +7,9 @@ To try it out via Docker, first copy `dockerfiles/apt.conf.sample` to `dockerfil
 ```bash
 docker build -t pyodbc-sqlserver . && docker run pyodbc-sqlserver
 ```
+
+Interactively:
+
+```bash
+docker build -t pyodbc-sqlserver . && docker run -it pyodbc-sqlserver /bin/bash
+```
