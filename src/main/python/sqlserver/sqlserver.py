@@ -35,6 +35,26 @@ class SqlServer:
                                     self.database,
                                     str(e)))
 
+    def truncate_table(self, table_name):
+        """Truncates a specified table. Synonymous with deleting all records in a table.
+
+        This is a destructive action, use care.
+
+        Args:
+            table_name (str): Name of the table to truncate.
+
+        Returns:
+            bool: If it succeeds this function will always return True.
+        """
+        try:
+            self.do_query('TRUNCATE TABLE {}'.format(table_name), commit=True)
+            return True
+        except Exception as e:
+            raise Exception('truncate_table(): SqlServer {}, db {} failed with exception: {}'
+                            .format(self.server,
+                                    self.database,
+                                    str(e)))
+
     def do_query(self, query, **kwargs):
         """Performs a given SQL query. Can be a pre-parameterized query (recommended for avoiding SQL Injection)
 
@@ -172,6 +192,7 @@ class SqlServer:
                                       of ASC
                 limit (int): Impose a limit on how many rows can be written to dest_table
                 truncate (bool): If False, will not truncate dest_table. Defaults to True.
+                where_conditional (str): A string containing a simple WHERE clause. Example: "ColumnA <> 'T' AND ColumnB <> 'R'"
         Returns:
             records_written (int): The number of records written.
         """
@@ -182,6 +203,7 @@ class SqlServer:
             order_by_desc = 'DESC'
             limit = None
             truncate = True
+            where_conditional = None
 
             if kwargs is not None:
                 for key, value in kwargs.items():
@@ -199,6 +221,8 @@ class SqlServer:
                         limit = int(value)
                     if key == 'truncate' and value is False:
                         truncate = False
+                    if key == 'where_conditional' and type(value) is str:
+                        where_conditional = str(value)
 
             # Input validation
             if type(source_column_names) is not list:
@@ -211,16 +235,23 @@ class SqlServer:
             # This will erase the records on the target table
             # Don't mess this up or you'll regret it!
             if truncate is True:
-                dest_sql_server.do_query('TRUNCATE TABLE {}'.format(dest_table), commit=True)
+                dest_sql_server.truncate_table(dest_table)
 
-            # Start by getting the first page of results from source_table on this sql server
-            index = 0
+            where_conditional_str = ''
+            if where_conditional is not None:
+                where_conditional_str += 'WHERE {}'.format(where_conditional)
             # TODO: support custom queries, or just support custom schema (i.e. not dbo)
-            query = 'SELECT * FROM [{}].[dbo].[{}] ORDER BY {} {}'.format(self.database, source_table, order_by_column_name, order_by_desc)
+            query = 'SELECT * FROM [{}].[dbo].[{}] {} ORDER BY {} {}'.format(self.database,
+                                                                             source_table,
+                                                                             where_conditional_str,
+                                                                             order_by_column_name,
+                                                                             order_by_desc)
 
             # Keep track of this and return it at the end
             records_written = 0
 
+            # Start by getting the first page of results from source_table on this sql server
+            index = 0
             source_table_results_rows = self.do_query_paginated(query, index=index, page_size=page_size)
             source_table_results = []
             for row in source_table_results_rows[0]:
@@ -274,6 +305,83 @@ class SqlServer:
                                     str(page_size),
                                     str(e),
                                     query))
+
+    def write_records(self, records, columns, table_name, **kwargs):
+        """Writes a list of records to a given table. Utilizes paginated queries to write.
+
+        Args:
+            records (list): List of lists, each list being a record to write
+            columns (list): List of strings, each the name of a column
+            table_name (str): Name of the table to which the records will be written
+
+            **kwargs: Arbitrary keyword arguments:
+                page_size (int): Bulk number of items to process at once, default 100
+                add_dtm_column (bool): If True, a value of datetime.now() will be inserted as the first item (column).
+                                       Don't include this column in your columns argument.
+                                       Recommended to set this field to datetime2(7) in SQL Server.
+                add_dtm_column_index (int): Specify the 0-based index of the dtm column, default 0.
+                truncate (bool): If True, will truncate table_name before writing records. Defaults to False.
+        """
+        try:
+            page_size = 100
+            add_dtm_column = False
+            add_dtm_column_index = 0
+            truncate = False
+
+            if kwargs is not None:
+                for key, value in kwargs.items():
+                    if key == 'page_size':
+                        page_size = int(value)
+                        if page_size <= 0:
+                            page_size = 100
+                    if key == 'add_dtm_column' and value is True:
+                        add_dtm_column = True
+                    if key == 'add_dtm_column_index':
+                        add_dtm_column_index = int(value)
+                    if key == 'truncate' and value is True:
+                        truncate = True
+
+            # Input validation
+            if type(records) is not list:
+                raise Exception('records was not a list')
+            if type(columns) is not list:
+                raise Exception('columns was not a list')
+
+            # This will erase the records on the target table
+            # Don't mess this up or you'll regret it!
+            if truncate is True:
+                self.truncate_table(table_name)
+
+            # If the add_dtm_column is true, then add a datetime column at the index specified (0 default)
+            # TODO: refactor this (duplicated) code
+            dest_columns = copy.copy(columns)
+            if add_dtm_column is True:
+                dest_columns.insert(add_dtm_column_index, 'as_of_dtm')
+
+            dest_sql_query = 'INSERT INTO [{}].[dbo].[{}] ({}) VALUES ({})'.format(self.database,
+                                                                                   table_name,
+                                                                                   ', '.join(dest_columns),
+                                                                                   SqlServerDataHelper.get_pre_parameterized_values(dest_columns))
+            # Write all of the records in the list, using a loop.
+            records_written = 0
+            index = 0
+            while (index + page_size) <= (len(records) + page_size):
+                try:
+                    _current_records = records[index:index + page_size]
+                    if len(_current_records) > 0:
+                        self.do_query(dest_sql_query, parameters_list=_current_records, execute_many=True, commit=True)
+                        records_written += len(_current_records)
+                    index += page_size
+                except Exception as e:
+                    raise Exception('Failed to write records[{}:{}] to the target database {} due to exception: {}'
+                                    .format(str(index), str(index + page_size), self.database, str(e)))
+            return records_written
+        except Exception as e:
+            raise Exception('write_records(): SqlServer {},{}, db {} failed with exception: {}'
+                            .format(self.server,
+                                    str(self.port),
+                                    self.database,
+                                    str(e)))
 
 
 class SqlServerDataHelper:

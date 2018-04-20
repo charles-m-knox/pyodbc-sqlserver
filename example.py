@@ -22,7 +22,6 @@ def main():
     username = config.get('sql_server', {}).get('username', None)
     password = config.get('sql_server', {}).get('password', None)
     port = config.get('sql_server', {}).get('port', None)
-    # table = config.get('sql_server', {}).get('table', None)
 
     print('Logging in...')
 
@@ -32,6 +31,12 @@ def main():
 
     for result in my_sql_query_results:
         print(result[0])
+
+    # records_written = my_sql_server.mirror_table('Table_1', source_column_names, my_sql_server, 'Table_2', where_conditional="something <> NULL")
+    # print(records_written)
+
+    # my_sql_server.truncate_table('Table_1')
+    # my_sql_server.write_records([[str(x)] for x in range(0, 500)], ['test'], 'Table_3', page_size=200)
 
 
 if __name__ == '__main__':

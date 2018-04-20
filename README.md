@@ -5,7 +5,7 @@ Contains some simple helper classes for interacting with SQL Server. Leverages p
 To try it out via Docker, first copy `dockerfiles/apt.conf.sample` to `dockerfiles/apt.conf` and edit the proxy settings, then similarly copy `Dockerfile.sample.Dockerfile` to `Dockerfile` and edit proxy settings there.
 
 ```bash
-docker build -t pyodbc-sqlserver . && docker run pyodbc-sqlserver
+docker build -t pyodbc-sqlserver . && docker run -it pyodbc-sqlserver
 ```
 
 Interactively:
