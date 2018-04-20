@@ -369,6 +369,13 @@ class SqlServer:
                 try:
                     _current_records = records[index:index + page_size]
                     if len(_current_records) > 0:
+                        # Insert the current datetime for this batch if desired
+                        if add_dtm_column is True:
+                            _now = datetime.datetime.now()
+                            _current_records = copy.copy(records[index:index + page_size])
+                            for _record in _current_records:
+                                _record.insert(add_dtm_column_index, _now)
+                        # Write the records
                         self.do_query(dest_sql_query, parameters_list=_current_records, execute_many=True, commit=True)
                         records_written += len(_current_records)
                     index += page_size
