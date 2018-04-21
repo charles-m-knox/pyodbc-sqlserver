@@ -35,6 +35,18 @@ class SqlServer:
                                     self.database,
                                     str(e)))
 
+    def close(self):
+        """Closes the SQL Server connection.
+        """
+        try:
+            self._connection.close()
+        except Exception as e:
+            raise Exception('close(): SqlServer {},{}, db {} failed with exception while closing: {}'
+                            .format(self.server,
+                                    str(self.port),
+                                    self.database,
+                                    str(e)))
+
     def truncate_table(self, table_name):
         """Truncates a specified table. Synonymous with deleting all records in a table.
 
