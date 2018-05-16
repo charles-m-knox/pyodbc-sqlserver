@@ -16,8 +16,8 @@ for content in contents:
     else:
         requires.append(content)
 
-print 'requires: {}'.format(requires)
-print 'links: {}'.format(links)
+print('requires: {}'.format(requires))
+print('links: {}'.format(links))
 
 setup(
     name='sqlserver',
