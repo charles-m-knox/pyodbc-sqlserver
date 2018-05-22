@@ -240,7 +240,7 @@ class SqlServer:
             if type(source_column_names) is not list:
                 raise Exception('source_column_names was not a list')
             try:
-                order_by_column_name = source_column_names[order_by_column_index]
+                order_by_column_name = '[{}]'.format(source_column_names[order_by_column_index])
             except Exception as e:
                 raise Exception('Setting order_by_column_name threw an exception: {}'.format(str(e)))
 
