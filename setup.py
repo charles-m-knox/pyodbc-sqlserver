@@ -10,7 +10,7 @@ regex = '.*#egg=(?P<package>[A-Za-z]+).*'
 for content in contents:
     match = re.match(regex, content)
     if match:
-        package = match.group('package')    
+        package = match.group('package')
         requires.append(package)
         links.append(content.replace('-e ', ''))
     else:

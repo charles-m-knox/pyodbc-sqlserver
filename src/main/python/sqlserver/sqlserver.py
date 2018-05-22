@@ -370,6 +370,11 @@ class SqlServer:
             if add_dtm_column is True:
                 dest_columns.insert(add_dtm_column_index, 'as_of_dtm')
 
+            # Columns with spaces in them need to have brackets.
+            # It's safe to just put brackets around everything
+            for dest_column in dest_columns:
+                dest_column = '[{}]'.format(dest_column)
+
             dest_sql_query = 'INSERT INTO [{}].[dbo].[{}] ({}) VALUES ({})'.format(self.database,
                                                                                    table_name,
                                                                                    ', '.join(dest_columns),
