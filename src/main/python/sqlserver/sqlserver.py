@@ -271,9 +271,15 @@ class SqlServer:
 
             # If the add_dtm_column is true, then add a datetime column at the index specified (0 default)
             # TODO: make this column name a constant
-            dest_column_names = copy.copy(source_column_names)
+            dest_columns = copy.copy(source_column_names)
             if add_dtm_column is True:
-                dest_column_names.insert(add_dtm_column_index, 'as_of_dtm')
+                dest_columns.insert(add_dtm_column_index, 'as_of_dtm')
+
+            # Columns with spaces in them need to have brackets.
+            # It's safe to just put brackets around everything
+            _dest_columns = []
+            for dest_column in dest_columns:
+                _dest_columns.append('[{}]'.format(dest_column))
 
             # Begin the repetitive data read/write process
             while len(source_table_results) > 0:
@@ -290,8 +296,8 @@ class SqlServer:
 
                 dest_sql_query = 'INSERT INTO [{}].[dbo].[{}] ({}) VALUES ({})'.format(dest_sql_server.database,
                                                                                        dest_table,
-                                                                                       ', '.join(dest_column_names),
-                                                                                       SqlServerDataHelper.get_pre_parameterized_values(dest_column_names))
+                                                                                       ', '.join(_dest_columns),
+                                                                                       SqlServerDataHelper.get_pre_parameterized_values(_dest_columns))
                 # Attempt to write this set of results to the target database
                 try:
                     dest_sql_server.do_query(dest_sql_query, parameters_list=source_table_results, execute_many=True, commit=True)
@@ -372,13 +378,14 @@ class SqlServer:
 
             # Columns with spaces in them need to have brackets.
             # It's safe to just put brackets around everything
+            _dest_columns = []
             for dest_column in dest_columns:
-                dest_column = '[{}]'.format(dest_column)
+                _dest_columns.append('[{}]'.format(dest_column))
 
             dest_sql_query = 'INSERT INTO [{}].[dbo].[{}] ({}) VALUES ({})'.format(self.database,
                                                                                    table_name,
-                                                                                   ', '.join(dest_columns),
-                                                                                   SqlServerDataHelper.get_pre_parameterized_values(dest_columns))
+                                                                                   ', '.join(_dest_columns),
+                                                                                   SqlServerDataHelper.get_pre_parameterized_values(_dest_columns))
             # Write all of the records in the list, using a loop.
             records_written = 0
             index = 0
