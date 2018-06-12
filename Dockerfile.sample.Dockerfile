@@ -1,10 +1,10 @@
-# Note: This image must be running debian jessie, which as of 1/25/18 is what python:3 runs
-#       The lines that install microsoft sql server odbc driver refer to debian 8 (jessie)
+# Note: This image must be running debian stretch, which as of 6/12/18 is what python:3.6.5-stretch runs
+#       The lines that install microsoft sql server odbc driver refer to debian 9 (stretch)
 #       If that changes, update accordingly
-FROM python:3
+FROM python:3.6.5-stretch
 ENV http_proxy http://proxy.site.com:9999
 ENV https_proxy http://proxy.site.com:9999
-ENV version=0.0.1
+ENV version=0.0.2
 RUN mkdir /pyodbc-sqlserver
 COPY dockerfiles /pyodbc-sqlserver/dockerfiles
 WORKDIR /pyodbc-sqlserver
@@ -12,7 +12,7 @@ RUN cp dockerfiles/apt.conf /etc/apt/apt.conf
 RUN apt-get update
 # https://serverfault.com/a/662037
 RUN export DEBIAN_FRONTEND=noninteractive
-RUN apt-get install locales
+RUN apt-get install -y locales
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 RUN locale-gen
 # Make sure to install apt-transport-https otherwise you get this error:
@@ -22,9 +22,9 @@ RUN locale-gen
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y gcc python-virtualenv python-dev git unixodbc-dev curl apt-transport-https 
 # https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server
 RUN http_proxy=$http_proxy https_proxy=$https_proxy curl -v https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN http_proxy=$http_proxy https_proxy=$https_proxy curl -v https://packages.microsoft.com/config/debian/8/prod.list > /etc/apt/sources.list.d/mssql-release.list
+RUN http_proxy=$http_proxy https_proxy=$https_proxy curl -v https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list
 RUN apt-get update
-RUN ACCEPT_EULA=Y apt-get install msodbcsql
+RUN ACCEPT_EULA=Y apt-get install -y msodbcsql17
 RUN git config --global http.proxy $http_proxy
 RUN git config --global https.proxy $https_proxy
 RUN git config --global url."https://".insteadOf git://
@@ -37,7 +37,7 @@ COPY requirements-build.txt /pyodbc-sqlserver/requirements-build.txt
 # RUN virtualenv venv
 # RUN chmod +x venv/bin/pyb
 # RUN . venv/bin/activate
-RUN http_proxy=$http_proxy https_proxy=$https_proxy pip install "setuptools==34.4.1" pybuilder
+RUN http_proxy=$http_proxy https_proxy=$https_proxy pip install "setuptools==39.1.0" pybuilder
 RUN http_proxy=$http_proxy https_proxy=$https_proxy pip install -r requirements.txt
 RUN http_proxy=$http_proxy https_proxy=$https_proxy pip install -r requirements-build.txt
 # After this command, code changes will always cause new image layer builds

@@ -17,7 +17,7 @@ authors = [
 ]
 summary = 'pyodbc sqlserver python helper classes'
 url = 'https://github.com/charles-m-knox/pyodbc-sqlserver'
-version = '0.0.1'
+version = '0.0.2'
 default_task = [
     'clean',
     'analyze',

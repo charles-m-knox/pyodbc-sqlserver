@@ -21,7 +21,7 @@ class SqlServer:
             self.password = password
             self.port = port
 
-            self._connection = pyodbc.connect('DRIVER={ODBC Driver 13 for SQL Server};' +
+            self._connection = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};' +
                                               'SERVER={},{};DATABASE={};UID={};PWD={}'
                                               .format(self.server,
                                                       str(self.port),
